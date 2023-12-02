@@ -3,7 +3,9 @@
 #include <BLEUtils.h>  //esp32 ble library
 #include <BLEServer.h>
 #include "LIDARLite_v4LED.h"
-
+#include "MedianFilterLib.h"
+MedianFilter<float> medianFilter(5); //changed float to int?
+int median_counter = 0;
 LIDARLite_v4LED myLIDAR;  //Click here to get the library: http://librarymanager/All#SparkFun_LIDARLitev4 by SparkFun
 float newDistance;
 
@@ -13,7 +15,7 @@ const char *VALUE_UUID = "d7daffe4-ae89-44e2-9c9f-66fc2b13573c";
 const int BUZZER_PIN = 33;
 BLEServer *pServer = NULL;
 BLECharacteristic *data_charic = NULL;
-int oldDistance;
+//int oldDistance;
 
 class ServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
@@ -90,15 +92,26 @@ void loop() {
 
 
   //Print to Serial port
-  USBSerial.print("New distance:");
+  /*USBSerial.print("New distance:");
   USBSerial.print(newDistance / 100);
-  USBSerial.println(" m");
+  USBSerial.println(" m"); */
+  median_counter++;
+  float median = medianFilter.AddValue(newDistance); 
+  if(median_counter==4){
+    int uintDistance2 = (int)median;
+    USBSerial.print("Nice value is:");
+    USBSerial.println(median/100);
+    median_counter = 0; //sets to 0 when median counter 
+  }
+
+
 
   //check for valid data:
   // if (uintDistance > 3 && uintDistance - oldDistance < 4){
   //   
   // }
-  if(uintDistance < 15){
+  tone(BUZZER_PIN, 2000, 10);
+  if(uintDistance < 15 && uintDistance > 2){
     USBSerial.println(uintDistance);
     tone(BUZZER_PIN, 2000);
   }
