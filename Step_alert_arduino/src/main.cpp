@@ -41,6 +41,7 @@ void setup() {
   USBSerial.println("Qwiic LIDARLite_v4 examples");
   Wire.begin(40, 41);  //Join I2C bus
   pinMode(BUZZER_PIN, OUTPUT);
+  tone(BUZZER_PIN, 2000, 10);
 
   //check if LIDAR will acknowledge over I2C
   if (myLIDAR.begin() == false) {
@@ -86,8 +87,7 @@ void loop() {
   // notify changed value
 
   int uintDistance = (int)newDistance;
-  data_charic->setValue(uintDistance);
-  data_charic->notify();
+  
   //delay(3);  // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
 
 
@@ -103,14 +103,15 @@ void loop() {
     USBSerial.println(median/100);
     median_counter = 0; //sets to 0 when median counter 
   }
-
-
+  uintDistance = int(median);
+  data_charic->setValue(uintDistance);
+  data_charic->notify();
 
   //check for valid data:
   // if (uintDistance > 3 && uintDistance - oldDistance < 4){
   //   
   // }
-  tone(BUZZER_PIN, 2000, 10);
+  
   if(uintDistance < 15 && uintDistance > 2){
     USBSerial.println(uintDistance);
     tone(BUZZER_PIN, 2000);
