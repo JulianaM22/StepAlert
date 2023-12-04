@@ -4,7 +4,7 @@
 #include <BLEServer.h>
 #include "LIDARLite_v4LED.h"
 #include "MedianFilterLib.h"
-MedianFilter<float> medianFilter(5); //changed float to int?
+MedianFilter<float> medianFilter(3); // was 5. changed float to int?
 int median_counter = 0;
 LIDARLite_v4LED myLIDAR;  //Click here to get the library: http://librarymanager/All#SparkFun_LIDARLitev4 by SparkFun
 float newDistance;
@@ -15,7 +15,7 @@ const char *VALUE_UUID = "d7daffe4-ae89-44e2-9c9f-66fc2b13573c";
 const int BUZZER_PIN = 33;
 BLEServer *pServer = NULL;
 BLECharacteristic *data_charic = NULL;
-//int oldDistance;
+int oldDistance = 0;
 
 class ServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
@@ -50,7 +50,7 @@ void setup() {
   }
   USBSerial.println("LIDAR acknowledged!");
 
-  uint8_t acq_count = 0x15;
+  uint8_t acq_count = 0x0a; //best is 0x15
   uint8_t acq_count_reg = 0x05;
 
   myLIDAR.write(acq_count_reg, &acq_count, 1);
@@ -108,10 +108,15 @@ void loop() {
   data_charic->notify();
 
   //check for valid data:
-  // if (uintDistance > 3 && uintDistance - oldDistance < 4){
-  //   
-  // }
+   if (uintDistance > 10 && uintDistance < 400){
+    //check rate of change 
+     if(oldDistance - uintDistance > uintDistance/10){
+      //USBSerial.println(uintDistance);
+      tone(BUZZER_PIN, 2000);
+     }
+   }
   
+  //this all works, but just senses closeness for buzzer testing
   if(uintDistance < 15 && uintDistance > 2){
     USBSerial.println(uintDistance);
     tone(BUZZER_PIN, 2000);
@@ -119,7 +124,7 @@ void loop() {
   else{
     noTone(BUZZER_PIN);
   }
-  //oldDistance = uintDistance;
+  oldDistance = uintDistance;
 
   //delay(2);  //Don't hammer too hard on the I2C bus
 }
